@@ -60,7 +60,8 @@ export type TranslationKey =
   | "memoryPlaceholder"
   | "viewNewspaper"
   | "viewCard"
-  | "noImage";
+  | "noImage"
+  | "tagline";
 
 const en: Record<TranslationKey, string> = {
   appTitle: "THE FUTURE TIME CAPSULE",
@@ -121,6 +122,7 @@ const en: Record<TranslationKey, string> = {
   viewNewspaper: "Newspaper View",
   viewCard: "Card View",
   noImage: "No Image",
+  tagline: "Here's who you became. Here's what you achieved. Here's your front page.",
 };
 
 const zh: Record<TranslationKey, string> = {
@@ -180,6 +182,7 @@ const zh: Record<TranslationKey, string> = {
   viewNewspaper: "报纸视图",
   viewCard: "卡片视图",
   noImage: "无图片",
+  tagline: "这就是你成为的人。这就是你取得的成就。这就是你的头版。",
 };
 
 const dicts: Record<Language, Record<TranslationKey, string>> = { en, zh };

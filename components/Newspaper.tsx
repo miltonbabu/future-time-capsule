@@ -228,6 +228,14 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
             </div>
           </header>
 
+          <div className="mt-4 text-center">
+            <p
+              className={`${bodyClass} text-xs sm:text-sm italic opacity-80 tracking-wide text-3d-engrave`}
+            >
+              "{t(lang, "tagline")}"
+            </p>
+          </div>
+
           {/* Headline + byline + photo */}
           <div className="mt-6 relative">
             <div className="text-center">
