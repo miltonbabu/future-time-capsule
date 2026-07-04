@@ -215,7 +215,7 @@ export default function FormPage() {
                 {t(language, "noSaved")}
               </p>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {archive.map((c) => (
                   <div key={c.id} className="rule-box">
                     <button

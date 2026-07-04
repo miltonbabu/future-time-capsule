@@ -207,9 +207,9 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
         </div>
 
         {/* Photos: 3D frame + AI illustration */}
-        <div className="mt-6 flex flex-wrap items-start justify-center gap-6">
+        <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6">
           {newspaper.photoDataUrl && (
-            <div className="polaroid-frame frame-3d w-44 sm:w-52 shrink-0">
+            <div className="polaroid-frame frame-3d w-36 sm:w-44 shrink-0">
               <img
                 src={newspaper.photoDataUrl}
                 alt={newspaper.input.name}
@@ -223,12 +223,12 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
             </div>
           )}
           {newspaper.imageUrl && (
-            <div className="frame-3d w-56 sm:w-64 shrink-0 overflow-hidden">
+            <div className="frame-3d w-40 sm:w-56 shrink-0 overflow-hidden">
               <img
                 src={newspaper.imageUrl}
                 alt={newspaper.article.image_prompt}
                 className="illustration-filter w-full object-cover"
-                style={{ maxHeight: 256 }}
+                style={{ maxHeight: 200 }}
                 crossOrigin="anonymous"
               />
               <p
@@ -289,39 +289,50 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
       </article>
 
       {/* Action bar — 3D buttons */}
-      <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-3">
+      <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-2 sm:gap-3">
         {shareToken && (
-          <button onClick={copyLink} className="btn-vintage btn-3d">
+          <button
+            onClick={copyLink}
+            className="btn-vintage btn-3d text-xs sm:text-sm px-3 sm:px-4"
+          >
             {copied ? t(lang, "copied") : t(lang, "copyLink")}
           </button>
         )}
         <button
           onClick={handleDownload}
-          className="btn-vintage btn-3d"
+          className="btn-vintage btn-3d text-xs sm:text-sm px-3 sm:px-4"
           disabled={downloading}
         >
           {downloading ? "..." : t(lang, "download")}
         </button>
         {onReset && (
-          <button onClick={onReset} className="btn-outline btn-3d">
+          <button
+            onClick={onReset}
+            className="btn-outline btn-3d text-xs sm:text-sm px-3 sm:px-4"
+          >
             {t(lang, "createAnother")}
           </button>
         )}
-        <Link href="/" className="btn-outline btn-3d">
+        <Link
+          href="/"
+          className="btn-outline btn-3d text-xs sm:text-sm px-3 sm:px-4"
+        >
           {t(lang, "home")}
         </Link>
       </div>
 
       {/* QR code */}
       {shareUrl && (
-        <div className="mx-auto mt-6 flex max-w-3xl flex-col items-center gap-2">
-          <div className="bg-white p-2">
-            <QRCodeSVG value={shareUrl} size={140} level="M" />
+        <div className="mx-auto mt-6 flex max-w-3xl flex-col items-center gap-2 px-4">
+          <div className="bg-white p-2 frame-3d">
+            <QRCodeSVG value={shareUrl} size={120} level="M" />
           </div>
           <p className={`${bodyClass} text-xs opacity-70`}>
             {t(lang, "scanToView")}
           </p>
-          <p className={`${bodyClass} text-xs break-all opacity-50`}>
+          <p
+            className={`${bodyClass} text-xs break-all opacity-50 max-w-xs text-center`}
+          >
             {shareUrl}
           </p>
         </div>
