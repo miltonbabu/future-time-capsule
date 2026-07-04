@@ -10,7 +10,7 @@ import { loadCapsules, makeId, removeCapsule, saveCapsule } from "@/lib/storage"
 export default function FormPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [loading, setLoading] = useState(false);
-  const [loadingLabel, setLoadingLabel] = useState("");
+  const [loadingStage, setLoadingStage] = useState<"article" | "image">("article");
   const [result, setResult] = useState<SharedNewspaper | null>(null);
   const [token, setToken] = useState<string | undefined>();
   const [archive, setArchive] = useState<SharedNewspaper[]>([]);
@@ -52,7 +52,7 @@ export default function FormPage() {
 
   const handleGenerate = async (input: CapsuleInput, photoDataUrl: string) => {
     setLoading(true);
-    setLoadingLabel(t(language, "generatingArticle"));
+    setLoadingStage("article");
     try {
       // 1. Generate article (GLM → fallback templates).
       const articleRes = await fetch("/api/generate-article", {
@@ -64,7 +64,7 @@ export default function FormPage() {
       const { article } = await articleRes.json();
 
       // 2. Generate AI illustration (free CogView-3-Flash, server-side).
-      setLoadingLabel(t(language, "generatingImage"));
+      setLoadingStage("image");
       let imageUrl: string | undefined;
       try {
         const imgRes = await fetch("/api/generate-image", {
@@ -127,7 +127,6 @@ export default function FormPage() {
       );
     } finally {
       setLoading(false);
-      setLoadingLabel("");
     }
   };
 
@@ -170,7 +169,7 @@ export default function FormPage() {
           onLanguageChange={setLanguage}
           onGenerate={handleGenerate}
           loading={loading}
-          loadingLabel={loadingLabel}
+          loadingStage={loadingStage}
         />
       )}
 
