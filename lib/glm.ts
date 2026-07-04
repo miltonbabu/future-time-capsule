@@ -8,7 +8,7 @@ export { ACHIEVEMENT_POOLS } from "./achievements";
  */
 
 const GLM_BASE = "https://open.bigmodel.cn/api/paas/v4";
-const TIMEOUT_VERCEL = 5_000;
+const TIMEOUT_VERCEL = 15_000;
 const TIMEOUT_SELF = 30_000;
 export const glmTimeout = () =>
   process.env.VERCEL ? TIMEOUT_VERCEL : TIMEOUT_SELF;

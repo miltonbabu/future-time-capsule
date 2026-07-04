@@ -1,11 +1,10 @@
 import { fetchWithTimeout, glmTimeout } from "@/lib/glm";
 import { clientIp, isSafeUrl, json, rateLimit, sanitizeText } from "@/lib/security";
 
-export const maxDuration = 10;
+export const maxDuration = 20;
 
 const STYLE_SUFFIX = ", futuristic, photorealistic sepia newspaper photo, no people no faces";
 const MAX_PROMPT = 180;
-const SERVER_TIMEOUT = 9_000; // fits within Vercel 10s function limit
 
 /**
  * Server-side image generation via free CogView-3-Flash (~3-5s).
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
           prompt: finalPrompt,
         }),
       },
-      SERVER_TIMEOUT,
+      glmTimeout(),
     );
     if (!res.ok) {
       const txt = await res.text().catch(() => "");

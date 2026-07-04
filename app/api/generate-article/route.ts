@@ -2,7 +2,7 @@ import { fallbackArticle, glmChat, extractJson, glmTimeout } from "@/lib/glm";
 import type { ArticleData, Language } from "@/lib/types";
 import { clientIp, json, rateLimit, sanitizeText } from "@/lib/security";
 
-export const maxDuration = 10;
+export const maxDuration = 20;
 
 /**
  * 5-minute TTL LRU cache for article responses (max 100 entries).
