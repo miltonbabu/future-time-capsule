@@ -6,6 +6,9 @@ import { QRCodeSVG } from "qrcode.react";
 import { toPng } from "html-to-image";
 import type { SharedNewspaper } from "@/lib/types";
 import { formatDate, t, yearEra } from "@/lib/i18n";
+import ShareCard from "./ShareCard";
+
+type ViewMode = "newspaper" | "card";
 
 interface Props {
   newspaper: SharedNewspaper;
@@ -15,9 +18,11 @@ interface Props {
 
 export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
   const articleRef = useRef<HTMLElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("newspaper");
 
   const lang = newspaper.input.language;
   const year = new Date(newspaper.input.futureDate).getFullYear() || 2035;
@@ -41,7 +46,8 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
   };
 
   const handleDownload = async () => {
-    const node = articleRef.current;
+    const node =
+      viewMode === "newspaper" ? articleRef.current : cardRef.current;
     if (!node) return;
     setDownloading(true);
     const clone = node.cloneNode(true) as HTMLElement;
@@ -115,7 +121,8 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
         backgroundColor: "#f4ead5",
       });
       const link = document.createElement("a");
-      link.download = `future-chronicle-${newspaper.input.name || "newspaper"}.png`;
+      const suffix = viewMode === "card" ? "-card" : "";
+      link.download = `future-chronicle-${newspaper.input.name || "newspaper"}${suffix}.png`;
       link.href = dataUrl;
       link.click();
     } catch (e) {
@@ -127,7 +134,8 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
           skipFonts: true,
         });
         const link = document.createElement("a");
-        link.download = `future-chronicle-${newspaper.input.name || "newspaper"}.png`;
+        const suffix = viewMode === "card" ? "-card" : "";
+        link.download = `future-chronicle-${newspaper.input.name || "newspaper"}${suffix}.png`;
         link.href = dataUrl;
         link.click();
       } catch (fallbackError) {
@@ -149,147 +157,175 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
 
   return (
     <div className={`era-${era} fade-in w-full perspective-scene`}>
-      <article
-        ref={articleRef}
-        className="paper-bg paper-3d mx-auto max-w-3xl p-6 sm:p-10"
-        style={{ background: "var(--paper)" }}
-      >
-        {/* Masthead */}
-        <header className="masthead py-4 text-center ornament-3d">
-          <div
-            className={`${bodyClass} flex justify-between text-xs uppercase tracking-widest opacity-70 text-3d-engrave`}
-          >
-            <span>{formatDate(newspaper.input.futureDate, lang)}</span>
-            <span>{t(lang, "price")}</span>
+      {viewMode === "newspaper" ? (
+        <article
+          ref={articleRef}
+          className="paper-bg paper-3d mx-auto max-w-3xl p-6 sm:p-10"
+          style={{ background: "var(--paper)" }}
+        >
+          {/* Masthead */}
+          <header className="masthead py-4 text-center ornament-3d">
+            <div
+              className={`${bodyClass} flex justify-between text-xs uppercase tracking-widest opacity-70 text-3d-engrave`}
+            >
+              <span>{formatDate(newspaper.input.futureDate, lang)}</span>
+              <span>{t(lang, "price")}</span>
+            </div>
+            <h1
+              className={`${headClass} mt-2 text-4xl sm:text-6xl font-black tracking-tight text-3d-emboss`}
+              style={{ color: "var(--ink)" }}
+            >
+              {t(lang, "appTitle")}
+            </h1>
+            <p
+              className={`${bodyClass} mt-1 text-xs sm:text-sm italic opacity-70 text-3d-engrave`}
+            >
+              {t(lang, "appSubtitle")}
+            </p>
+            <hr className="rule-3d my-2" />
+            <div
+              className={`${bodyClass} flex justify-between text-xs uppercase tracking-widest opacity-70 text-3d-engrave`}
+            >
+              <span>
+                {t(lang, "vol")} {year} {t(lang, "edition")}
+              </span>
+              <span>{t(lang, "theFuture")}</span>
+            </div>
+            <div
+              className={`${bodyClass} flex justify-between text-xs uppercase tracking-widest opacity-60 mt-1 text-3d-engrave`}
+            >
+              <span>{newspaper.input.location || "Zhengzhou, China"}</span>
+              <span>{t(lang, "price")}</span>
+            </div>
+          </header>
+
+          {/* Headline + byline */}
+          <div className="mt-6 text-center">
+            <h2
+              className={`${headClass} text-3xl sm:text-5xl font-bold leading-tight text-3d-emboss`}
+              style={{ color: "var(--ink)" }}
+            >
+              {newspaper.article.headline}
+            </h2>
+            <p
+              className={`${bodyClass} mt-3 text-xs sm:text-sm uppercase tracking-widest opacity-70 text-3d-engrave`}
+            >
+              {t(lang, "byline")} — {t(lang, "published")}{" "}
+              {formatDate(newspaper.input.futureDate, lang)}
+            </p>
           </div>
-          <h1
-            className={`${headClass} mt-2 text-4xl sm:text-6xl font-black tracking-tight text-3d-emboss`}
+
+          {/* Photos: 3D frame + AI illustration */}
+          <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6">
+            {newspaper.photoDataUrl && (
+              <div className="polaroid-frame frame-3d w-36 sm:w-44 shrink-0">
+                <img
+                  src={newspaper.photoDataUrl}
+                  alt={newspaper.input.name}
+                  className="sepia-photo"
+                />
+                <p
+                  className={`${bodyClass} mt-2 text-center text-xs italic opacity-70 text-3d-engrave`}
+                >
+                  {newspaper.input.name} · {newspaper.input.team}
+                </p>
+              </div>
+            )}
+            {newspaper.imageUrl && (
+              <div className="frame-3d w-40 sm:w-56 shrink-0 overflow-hidden">
+                <img
+                  src={newspaper.imageUrl}
+                  alt={newspaper.article.image_prompt}
+                  className="illustration-filter w-full object-cover"
+                  style={{ maxHeight: 200 }}
+                  crossOrigin="anonymous"
+                />
+                <p
+                  className={`${bodyClass} mt-1 text-center text-xs italic opacity-60 text-3d-engrave`}
+                >
+                  {lang === "zh" ? "AI 插图" : "AI Illustration"}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Article body — 2 columns with drop cap */}
+          <div
+            className={`${bodyClass} cols-2 mt-6 text-sm sm:text-base leading-relaxed justify-news`}
             style={{ color: "var(--ink)" }}
           >
-            {t(lang, "appTitle")}
-          </h1>
-          <p
-            className={`${bodyClass} mt-1 text-xs sm:text-sm italic opacity-70 text-3d-engrave`}
-          >
-            {t(lang, "appSubtitle")}
-          </p>
-          <hr className="rule-3d my-2" />
-          <div
-            className={`${bodyClass} flex justify-between text-xs uppercase tracking-widest opacity-70 text-3d-engrave`}
-          >
-            <span>
-              {t(lang, "vol")} {year} {t(lang, "edition")}
-            </span>
-            <span>{t(lang, "theFuture")}</span>
+            <p className="drop-cap mb-3">{newspaper.article.paragraph1}</p>
+            <p className="mb-3">{newspaper.article.paragraph2}</p>
+            <p className="mb-3">{newspaper.article.paragraph3}</p>
           </div>
-          <div
-            className={`${bodyClass} flex justify-between text-xs uppercase tracking-widest opacity-60 mt-1 text-3d-engrave`}
-          >
-            <span>{newspaper.input.location || "Zhengzhou, China"}</span>
-            <span>{t(lang, "price")}</span>
-          </div>
-        </header>
 
-        {/* Headline + byline */}
-        <div className="mt-6 text-center">
-          <h2
-            className={`${headClass} text-3xl sm:text-5xl font-bold leading-tight text-3d-emboss`}
-            style={{ color: "var(--ink)" }}
-          >
-            {newspaper.article.headline}
-          </h2>
-          <p
-            className={`${bodyClass} mt-3 text-xs sm:text-sm uppercase tracking-widest opacity-70 text-3d-engrave`}
-          >
-            {t(lang, "byline")} — {t(lang, "published")}{" "}
-            {formatDate(newspaper.input.futureDate, lang)}
-          </p>
-        </div>
-
-        {/* Photos: 3D frame + AI illustration */}
-        <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6">
-          {newspaper.photoDataUrl && (
-            <div className="polaroid-frame frame-3d w-36 sm:w-44 shrink-0">
-              <img
-                src={newspaper.photoDataUrl}
-                alt={newspaper.input.name}
-                className="sepia-photo"
-              />
-              <p
-                className={`${bodyClass} mt-2 text-center text-xs italic opacity-70 text-3d-engrave`}
-              >
-                {newspaper.input.name} · {newspaper.input.team}
-              </p>
-            </div>
-          )}
-          {newspaper.imageUrl && (
-            <div className="frame-3d w-40 sm:w-56 shrink-0 overflow-hidden">
-              <img
-                src={newspaper.imageUrl}
-                alt={newspaper.article.image_prompt}
-                className="illustration-filter w-full object-cover"
-                style={{ maxHeight: 200 }}
-                crossOrigin="anonymous"
-              />
-              <p
-                className={`${bodyClass} mt-1 text-center text-xs italic opacity-60 text-3d-engrave`}
-              >
-                {lang === "zh" ? "AI 插图" : "AI Illustration"}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Article body — 2 columns with drop cap */}
-        <div
-          className={`${bodyClass} cols-2 mt-6 text-sm sm:text-base leading-relaxed justify-news`}
-          style={{ color: "var(--ink)" }}
-        >
-          <p className="drop-cap mb-3">{newspaper.article.paragraph1}</p>
-          <p className="mb-3">{newspaper.article.paragraph2}</p>
-          <p className="mb-3">{newspaper.article.paragraph3}</p>
-        </div>
-
-        {/* Pull quote — 3D raised panel */}
-        <blockquote
-          className={`${headClass} quote-3d my-6 text-center text-xl sm:text-2xl italic p-4`}
-          style={{ color: "var(--accent)" }}
-        >
-          &ldquo;{newspaper.article.future_quote}&rdquo;
-          <footer
-            className={`${bodyClass} mt-2 text-xs not-italic uppercase tracking-widest opacity-70 text-3d-engrave`}
-          >
-            — {newspaper.input.name}
-          </footer>
-        </blockquote>
-
-        {/* Reward — 3D panel */}
-        <div className={`${bodyClass} quote-3d my-4 text-sm p-4`}>
-          <span
-            className="font-bold uppercase tracking-widest mr-2 text-3d-emboss"
+          {/* Pull quote — 3D raised panel */}
+          <blockquote
+            className={`${headClass} quote-3d my-6 text-center text-xl sm:text-2xl italic p-4`}
             style={{ color: "var(--accent)" }}
           >
-            {t(lang, "reward")}:
-          </span>
-          {newspaper.article.reward}
-        </div>
+            &ldquo;{newspaper.article.future_quote}&rdquo;
+            <footer
+              className={`${bodyClass} mt-2 text-xs not-italic uppercase tracking-widest opacity-70 text-3d-engrave`}
+            >
+              — {newspaper.input.name}
+            </footer>
+          </blockquote>
 
-        {/* Memory — 3D panel */}
-        {newspaper.input.memory && (
+          {/* Reward — 3D panel */}
           <div className={`${bodyClass} quote-3d my-4 text-sm p-4`}>
             <span
               className="font-bold uppercase tracking-widest mr-2 text-3d-emboss"
               style={{ color: "var(--accent)" }}
             >
-              {t(lang, "memory")}:
+              {t(lang, "reward")}:
             </span>
-            {newspaper.input.memory}
+            {newspaper.article.reward}
           </div>
-        )}
-      </article>
+
+          {/* Memory — 3D panel */}
+          {newspaper.input.memory && (
+            <div className={`${bodyClass} quote-3d my-4 text-sm p-4`}>
+              <span
+                className="font-bold uppercase tracking-widest mr-2 text-3d-emboss"
+                style={{ color: "var(--accent)" }}
+              >
+                {t(lang, "memory")}:
+              </span>
+              {newspaper.input.memory}
+            </div>
+          )}
+        </article>
+      ) : (
+        <ShareCard ref={cardRef} newspaper={newspaper} />
+      )}
+
+      {/* View mode toggle */}
+      <div className="mx-auto mt-4 flex max-w-3xl flex-wrap items-center justify-center gap-2">
+        <button
+          onClick={() => setViewMode("newspaper")}
+          className={`btn-3d text-xs sm:text-sm px-3 sm:px-4 transition-all ${
+            viewMode === "newspaper"
+              ? "btn-vintage"
+              : "btn-outline opacity-60 hover:opacity-100"
+          }`}
+        >
+          {t(lang, "viewNewspaper")}
+        </button>
+        <button
+          onClick={() => setViewMode("card")}
+          className={`btn-3d text-xs sm:text-sm px-3 sm:px-4 transition-all ${
+            viewMode === "card"
+              ? "btn-vintage"
+              : "btn-outline opacity-60 hover:opacity-100"
+          }`}
+        >
+          {t(lang, "viewCard")}
+        </button>
+      </div>
 
       {/* Action bar — 3D buttons */}
-      <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-2 sm:gap-3">
+      <div className="mx-auto mt-4 flex max-w-3xl flex-wrap items-center justify-center gap-2 sm:gap-3">
         {shareToken && (
           <button
             onClick={copyLink}

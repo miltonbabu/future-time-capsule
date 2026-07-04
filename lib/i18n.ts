@@ -57,7 +57,10 @@ export type TranslationKey =
   | "location"
   | "locationPlaceholder"
   | "memory"
-  | "memoryPlaceholder";
+  | "memoryPlaceholder"
+  | "viewNewspaper"
+  | "viewCard"
+  | "noImage";
 
 const en: Record<TranslationKey, string> = {
   appTitle: "THE FUTURE TIME CAPSULE",
@@ -115,6 +118,9 @@ const en: Record<TranslationKey, string> = {
   locationPlaceholder: "e.g. Zhengzhou, China",
   memory: "A Special Memory",
   memoryPlaceholder: "e.g. That moment we laughed together...",
+  viewNewspaper: "Newspaper View",
+  viewCard: "Card View",
+  noImage: "No Image",
 };
 
 const zh: Record<TranslationKey, string> = {
@@ -171,6 +177,9 @@ const zh: Record<TranslationKey, string> = {
   locationPlaceholder: "例如：郑州，中国",
   memory: "一段特别的记忆",
   memoryPlaceholder: "例如：我们一起欢笑的那个时刻……",
+  viewNewspaper: "报纸视图",
+  viewCard: "卡片视图",
+  noImage: "无图片",
 };
 
 const dicts: Record<Language, Record<TranslationKey, string>> = { en, zh };
