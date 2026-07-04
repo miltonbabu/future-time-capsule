@@ -7,17 +7,18 @@
 
 @theme {
   /* Core palette via CSS variables (year-shifted at runtime) */
-  --color-paper: #f4ead5;
-  --color-ink: #1c1612;
-  --color-accent: #781e1e;
+  --color-paper: #e8dcc8;
+  --color-ink: #1a1510;
+  --color-accent: #6b1a1a;
 
-  /* Newspaper — Old Style serif fonts (readable vintage) */
+  /* Newspaper — Typewriter + serif fonts (vintage aesthetic) */
   --font-headline:
     "Libre Caslon Display", "Playfair Display", Georgia, "Noto Serif SC", serif;
   --font-body:
-    "IM Fell English", "EB Garamond", "Libre Caslon Text", Georgia, serif;
+    "Courier Prime", "Special Elite", "IM Fell English", "EB Garamond", Georgia,
+    monospace;
   --font-headline-zh: "Noto Serif SC", "SimSun", "STSong", serif;
-  --font-body-zh: "Noto Serif SC", "SimSun", "STSong", serif;
+  --font-body-zh: "Noto Serif SC", "Courier Prime", "SimSun", "STSong", serif;
 
   /* Landing — Modern clean sans-serif fonts */
   --font-landing-head:
@@ -26,33 +27,33 @@
 }
 
 :root {
-  --paper: #f4ead5;
-  --ink: #1c1612;
-  --accent: #781e1e;
-  --glow: rgba(120, 30, 30, 0.35);
+  --paper: #e8dcc8;
+  --ink: #1a1510;
+  --accent: #6b1a1a;
+  --glow: rgba(107, 26, 26, 0.35);
 }
 
 /* Classic vintage year-shifted accent themes */
 .era-near {
-  /* 2025-2030: Warm cream + deep burgundy */
-  --paper: #f4ead5;
-  --ink: #1c1612;
-  --accent: #781e1e;
-  --glow: rgba(120, 30, 30, 0.35);
+  /* 2025-2030: Warm newsprint + deep burgundy */
+  --paper: #e8dcc8;
+  --ink: #1a1510;
+  --accent: #6b1a1a;
+  --glow: rgba(107, 26, 26, 0.35);
 }
 .era-mid {
-  /* 2031-2040: Aged parchment + indigo ink */
-  --paper: #f0e8da;
-  --ink: #161a32;
-  --accent: #1c2660;
-  --glow: rgba(28, 38, 96, 0.35);
+  /* 2031-2040: Aged newsprint + indigo ink */
+  --paper: #d8cab0;
+  --ink: #151a30;
+  --accent: #1a2458;
+  --glow: rgba(26, 36, 88, 0.35);
 }
 .era-far {
-  /* 2041+: Weathered linen + burnt sienna */
-  --paper: #f6ecd6;
-  --ink: #281e14;
-  --accent: #98601a;
-  --glow: rgba(152, 96, 26, 0.35);
+  /* 2041+: Weathered newsprint + burnt sienna */
+  --paper: #e0d4bc;
+  --ink: #251c12;
+  --accent: #8a5515;
+  --glow: rgba(138, 85, 21, 0.35);
 }
 
 html,

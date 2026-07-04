@@ -1,13 +1,13 @@
 import { fetchWithTimeout, glmTimeout } from "@/lib/glm";
 import { clientIp, isSafeUrl, json, rateLimit, sanitizeText } from "@/lib/security";
 
-export const maxDuration = 20;
+export const maxDuration = 30;
 
-const STYLE_SUFFIX = ", futuristic, photorealistic sepia newspaper photo, no people no faces";
-const MAX_PROMPT = 180;
+const STYLE_SUFFIX = ", vintage newspaper photo style, sepia tone, cinematic lighting, highly detailed, photorealistic, no people no faces, news photography aesthetic";
+const MAX_PROMPT = 250;
 
 /**
- * Server-side image generation via free CogView-3-Flash (~3-5s).
+ * Server-side image generation via free CogView-3-Flash (~5-10s).
  * Returns the generated image URL. Never exposes the API key to the client.
  */
 export async function POST(req: Request) {
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     return json({ src: null, error: "GLM_API_KEY not configured" }, 200);
   }
 
-  let body: { prompt?: string };
+  let body: { prompt?: string; achievement?: string };
   try {
     body = await req.json();
   } catch {
@@ -29,7 +29,10 @@ export async function POST(req: Request) {
   let prompt = sanitizeText(body.prompt ?? "", 300);
   if (!prompt) return json({ error: "Missing prompt" }, 400);
 
-  // Cap prompt at MAX_PROMPT, but NEVER truncate the style suffix.
+  if (body.achievement) {
+    prompt = `${body.achievement}. ${prompt}`;
+  }
+
   const maxBase = Math.max(20, MAX_PROMPT - STYLE_SUFFIX.length);
   if (prompt.length + STYLE_SUFFIX.length > MAX_PROMPT) {
     prompt = prompt.slice(0, maxBase);
@@ -48,9 +51,11 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           model: "cogview-3-flash",
           prompt: finalPrompt,
+          width: 1024,
+          height: 576,
         }),
       },
-      glmTimeout(),
+      25_000,
     );
     if (!res.ok) {
       const txt = await res.text().catch(() => "");

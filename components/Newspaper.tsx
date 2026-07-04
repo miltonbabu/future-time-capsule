@@ -199,55 +199,59 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
             </div>
           </header>
 
-          {/* Headline + byline */}
-          <div className="mt-6 text-center">
-            <h2
-              className={`${headClass} text-3xl sm:text-5xl font-bold leading-tight text-3d-emboss`}
-              style={{ color: "var(--ink)" }}
-            >
-              {newspaper.article.headline}
-            </h2>
-            <p
-              className={`${bodyClass} mt-3 text-xs sm:text-sm uppercase tracking-widest opacity-70 text-3d-engrave`}
-            >
-              {t(lang, "byline")} — {t(lang, "published")}{" "}
-              {formatDate(newspaper.input.futureDate, lang)}
-            </p>
-          </div>
-
-          {/* Photos: 3D frame + AI illustration */}
-          <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6">
+          {/* Headline + byline + photo */}
+          <div className="mt-6 relative">
+            <div className="text-center">
+              <h2
+                className={`${headClass} text-3xl sm:text-5xl font-bold leading-tight text-3d-emboss`}
+                style={{ color: "var(--ink)" }}
+              >
+                {newspaper.article.headline}
+              </h2>
+              <p
+                className={`${bodyClass} mt-3 text-xs sm:text-sm uppercase tracking-widest opacity-70 text-3d-engrave`}
+              >
+                {t(lang, "byline")} — {t(lang, "published")}{" "}
+                {formatDate(newspaper.input.futureDate, lang)}
+              </p>
+            </div>
             {newspaper.photoDataUrl && (
-              <div className="polaroid-frame frame-3d w-36 sm:w-44 shrink-0">
-                <img
-                  src={newspaper.photoDataUrl}
-                  alt={newspaper.input.name}
-                  className="sepia-photo"
-                />
-                <p
-                  className={`${bodyClass} mt-2 text-center text-xs italic opacity-70 text-3d-engrave`}
-                >
-                  {newspaper.input.name} · {newspaper.input.team}
-                </p>
+              <div className="absolute -right-2 sm:-right-4 top-0 w-24 sm:w-32">
+                <div className="polaroid-frame frame-3d">
+                  <img
+                    src={newspaper.photoDataUrl}
+                    alt={newspaper.input.name}
+                    className="sepia-photo"
+                  />
+                  <p
+                    className={`${bodyClass} mt-2 text-center text-[10px] italic opacity-70 text-3d-engrave`}
+                  >
+                    {newspaper.input.name}
+                  </p>
+                </div>
               </div>
             )}
-            {newspaper.imageUrl && (
-              <div className="frame-3d w-40 sm:w-56 shrink-0 overflow-hidden">
+          </div>
+
+          {/* Full-width AI illustration banner */}
+          {newspaper.imageUrl && (
+            <div className="mt-6">
+              <div className="frame-3d overflow-hidden">
                 <img
                   src={newspaper.imageUrl}
                   alt={newspaper.article.image_prompt}
                   className="illustration-filter w-full object-cover"
-                  style={{ maxHeight: 200 }}
+                  style={{ maxHeight: 220 }}
                   crossOrigin="anonymous"
                 />
-                <p
-                  className={`${bodyClass} mt-1 text-center text-xs italic opacity-60 text-3d-engrave`}
-                >
-                  {lang === "zh" ? "AI 插图" : "AI Illustration"}
-                </p>
               </div>
-            )}
-          </div>
+              <p
+                className={`${bodyClass} mt-1 text-center text-xs italic opacity-60 text-3d-engrave`}
+              >
+                {lang === "zh" ? "AI 插图" : "AI Illustration"}
+              </p>
+            </div>
+          )}
 
           {/* Article body — 2 columns with drop cap */}
           <div

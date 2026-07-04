@@ -71,7 +71,8 @@ export default function FormPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${input.achievement}. ${article.image_prompt}`,
+            prompt: article.image_prompt,
+            achievement: input.achievement,
           }),
         });
         const imgData = await imgRes.json();
