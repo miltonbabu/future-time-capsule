@@ -6,7 +6,7 @@
 
 ## 🏆 TRAE Friends Zhengzhou Hackathon — July 2026
 
-**Live Demo:** [future-is-here.vercel.app](https://future-is-here.vercel.app)
+**Live Demo:** [future.miltonbabu.site](https://future.miltonbabu.site)
 
 **Local Development:** `npm run dev` → http://localhost:3000
 
