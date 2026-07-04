@@ -1,271 +1,293 @@
-# Skill Modules Documentation
+# 📰 Future Time Capsule — Skill Modules
 
-## Overview
-
-The Future Time Capsule application is organized into discrete skill modules, each encapsulating a specific capability with defined inputs, outputs, and integration points.
-
-## Skill Architecture
-
-Each skill module follows a consistent pattern:
-1. **Input Interface**: Defines the parameters required to execute the skill
-2. **Output Interface**: Defines the return structure of the skill
-3. **Main Function**: Implements the core logic with fallback handling
+> *Built at TRAE Friends Zhengzhou Hackathon, July 2026*
 
 ---
 
-## 1. Article Generation Skill
+## 🎯 Overview
 
-**File**: `lib/skills/article-generation.ts`
+This project implements several key skill modules that power the Future Time Capsule application. Each skill has a clear responsibility, input/output specifications, and integration points.
 
-### Purpose
-Generates newspaper articles from user input using AI (GLM-4-Flash) with fallback templates.
+---
+
+## 📝 Skill 1: Article Generation
+
+### Responsibility
+Generate witty, context-aware newspaper articles from user input.
 
 ### Input
-
 ```typescript
-interface ArticleGenerationInput {
-  input: CapsuleInput; // User input with name, team, achievement, date, etc.
+interface ArticleInput {
+  name: string;
+  team: string;
+  achievement: string;
+  futureDate: string; // ISO date string
+  language: "en" | "zh";
 }
 ```
 
 ### Output
-
 ```typescript
-interface ArticleGenerationOutput {
-  article: ArticleData; // Complete article with headline, paragraphs, quote, reward, image_prompt
-  provider: "glm" | "fallback"; // Source of the generated content
+interface ArticleOutput {
+  headline: string;
+  paragraph1: string;
+  paragraph2: string;
+  paragraph3: string;
+  future_quote: string;
+  reward: string;
+  image_prompt: string; // English description for image generation
 }
 ```
 
-### Functions
+### Integration
+- **Endpoint:** `POST /api/generate-article`
+- **Model:** GLM-4-Flash
+- **Fallback:** Pre-built template articles by category (5 categories, bilingual)
 
-| Function | Description |
-|----------|-------------|
-| `generateArticle(params)` | Generates a complete newspaper article |
-| `generateAchievementList(params)` | Generates 3 funny achievement ideas |
-
-### Integration Points
-
-- **API Route**: `/api/generate-article`
-- **API Route**: `/api/generate-achievement`
-- **Fallback**: `lib/glm.ts` — `fallbackArticle()` and `ACHIEVEMENT_POOLS`
-
-### AI Prompt Structure
-
-System prompt instructs the model to:
-- Write as a futuristic newspaper journalist
-- Generate 7 required fields (headline, 3 paragraphs, quote, reward, image prompt)
-- Keep content absurd, witty, and funny
-- Return valid JSON without markdown
+### Key Features
+- Achievement is the central focus of the article
+- Headline must include team name
+- First-person quote from the person
+- Short funny reward line
+- Language-specific generation (English/Chinese)
 
 ---
 
-## 2. Image Generation Skill
+## 🖼️ Skill 2: Image Generation
 
-**File**: `lib/skills/image-generation.ts`
-
-### Purpose
-Generates AI illustrations using CogView-3-Flash based on article prompts.
+### Responsibility
+Generate photorealistic newspaper-style illustrations based on achievement context.
 
 ### Input
-
 ```typescript
-interface ImageGenerationInput {
-  prompt: string; // Image description for the AI
+interface ImageInput {
+  prompt: string;       // Image prompt from article generation
+  achievement: string;  // User's achievement for context
 }
 ```
 
 ### Output
-
 ```typescript
-interface ImageGenerationOutput {
-  imageUrl: string; // URL to generated image (or empty string on failure)
-  provider: "cogview" | "fallback"; // Source of the image
+interface ImageOutput {
+  src: string | null;   // Image URL if successful
+  error?: string;       // Error message if failed
 }
 ```
 
-### Functions
+### Integration
+- **Endpoint:** `POST /api/generate-image`
+- **Model:** CogView-3-Flash (free)
+- **Fallback:** Skip image — newspaper renders without illustration
 
-| Function | Description |
-|----------|-------------|
-| `generateImage(params)` | Generates an image from a text prompt |
-
-### Integration Points
-
-- **API Route**: `/api/generate-image`
-- **Image Prompt Source**: Article's `image_prompt` field from article generation
-
-### Configuration
-
-| Parameter | Value |
-|-----------|-------|
-| Model | cogview-3-flash |
-| Size | 1024x1024 |
-| API Base | `https://open.bigmodel.cn/api/paas/v4/images/generations` |
+### Key Features
+- Free image generation (CogView-3-Flash)
+- Vintage newspaper photo style
+- Sepia tone, cinematic lighting
+- No people or faces
+- 1024×576 aspect ratio (widescreen banner)
 
 ---
 
-## 3. Sharing Skill
+## 🏆 Skill 3: Achievement Generation
 
-**File**: `lib/skills/sharing.ts`
+### Responsibility
+Generate creative, category-specific achievement suggestions.
 
-### Purpose
-Creates and retrieves shareable newspaper links with 9-character tokens.
-
-### Inputs
-
+### Input
 ```typescript
-// Create Share
-interface CreateShareInput {
-  newspaper: SharedNewspaper; // Full newspaper data
-}
-
-// Get Share
-interface GetShareInput {
-  token: string; // 9-character share token
+interface AchievementInput {
+  category: "tech" | "ai" | "money" | "time" | "all";
+  language: "en" | "zh";
 }
 ```
 
-### Outputs
-
+### Output
 ```typescript
-// Create Share
-interface CreateShareOutput {
-  token: string; // Generated share token
-}
-
-// Get Share
-interface GetShareOutput {
-  newspaper: SharedNewspaper | null; // Retrieved newspaper or null
+interface AchievementOutput {
+  achievements: string[];  // Array of 3 achievement ideas
 }
 ```
 
-### Functions
+### Integration
+- **Endpoint:** `POST /api/generate-achievement`
+- **Model:** GLM-4-Flash
+- **Fallback:** Pre-defined achievement pools by category
 
-| Function | Description |
-|----------|-------------|
-| `createShare(params)` | Creates a new share token and persists the newspaper |
-| `retrieveShare(params)` | Retrieves a newspaper by share token |
-
-### Integration Points
-
-- **API Route**: `/api/share` (POST)
-- **API Route**: `/api/share/[token]` (GET)
-- **Database**: `lib/db.ts` — `makeToken()`, `saveShare()`, `getShare()`
-
-### Token Properties
-
-- 9 characters, base32 (alphanumeric lowercase)
-- Expires after 30 days (Redis TTL or file-based storage)
-- Remote images are converted to base64 for permanent storage
+### Key Features
+- 3 ideas per request
+- Short (10-15 words each)
+- Funny and creative
+- Category-specific
+- Language-specific generation
 
 ---
 
-## 4. Capsule Management Skill
+## 🔗 Skill 4: Sharing System
 
-**File**: `lib/skills/capsule-management.ts`
+### Responsibility
+Create shareable links for newspapers with images.
 
-### Purpose
-Manages client-side storage of user's saved newspapers (capsules).
-
-### Inputs
-
+### Input
 ```typescript
-// Create Capsule
-interface CreateCapsuleInput {
-  input: CapsuleInput; // User input data
-  article: ArticleData; // Generated article
-  photoDataUrl?: string; // Compressed user photo (base64)
-  imageUrl?: string; // AI-generated illustration
-}
-
-// Save Capsule
-interface SaveCapsuleInput {
-  capsule: SharedNewspaper; // Full capsule to persist
-}
-
-// Remove Capsule
-interface RemoveCapsuleInput {
-  id: string; // Capsule ID to delete
+interface ShareInput {
+  newspaper: SharedNewspaper;  // Full newspaper data including images
 }
 ```
 
-### Outputs
-
+### Output
 ```typescript
-// Create Capsule
-interface CreateCapsuleOutput {
-  capsule: SharedNewspaper; // Newly created capsule with generated ID
-}
-
-// Save/Remove Capsule
-interface SaveCapsuleOutput {
-  capsules: SharedNewspaper[]; // Updated list of all capsules
+interface ShareOutput {
+  token: string;  // 9-character share token
+  url: string;    // Full share URL
 }
 ```
 
-### Functions
+### Integration
+- **Endpoint:** `POST /api/share`
+- **Storage:** Upstash Redis (Vercel) / JSON files (local)
+- **QR Code:** Generated client-side using qrcode.react
 
-| Function | Description |
-|----------|-------------|
-| `createCapsule(params)` | Creates a new capsule with unique ID |
-| `persistCapsule(params)` | Saves a capsule to localStorage |
-| `deleteCapsule(params)` | Removes a capsule from localStorage |
-| `fetchCapsules()` | Loads all saved capsules |
-
-### Integration Points
-
-- **Storage**: `lib/storage.ts` — `saveCapsule()`, `removeCapsule()`, `loadCapsules()`, `makeId()`
-- **Form Component**: `components/CapsuleForm.tsx`
-- **Gallery Component**: `components/CapsuleGallery.tsx`
-
-### Storage Limits
-
-- Maximum 20 capsules per user
-- Photo compression: ~400x500 JPEG @ 0.7 quality (~50-100KB)
-- Automatic quota fallback (see RULES.md)
+### Key Features
+- 9-character unique share tokens
+- Full newspaper data stored server-side
+- Images converted to base64 for permanence
+- QR code generation for mobile sharing
+- 30-day validity for shared links
 
 ---
 
-## Skill Integration Flow
+## 💾 Skill 5: Local Storage
 
-### Newspaper Creation Flow
+### Responsibility
+Manage user's saved newspapers locally.
 
-1. **User fills form** → `CapsuleForm.tsx`
-2. **Validate input** → `lib/rules.ts` — `validateCapsuleInput()`
-3. **Generate article** → `lib/skills/article-generation.ts` — `generateArticle()`
-4. **Generate image** → `lib/skills/image-generation.ts` — `generateImage()`
-5. **Create capsule** → `lib/skills/capsule-management.ts` — `createCapsule()`
-6. **Persist capsule** → `lib/skills/capsule-management.ts` — `persistCapsule()`
-7. **Share (optional)** → `lib/skills/sharing.ts` — `createShare()`
+### Input
+```typescript
+interface StorageInput {
+  newspaper: SharedNewspaper;
+}
+```
 
-### Share View Flow
+### Output
+```typescript
+interface StorageOutput {
+  saved: SharedNewspaper[];  // All saved newspapers
+}
+```
 
-1. **User visits share URL** → `/share/[token]/page.tsx`
-2. **Validate token** → `lib/rules.ts` — `isValidShareToken()`
-3. **Retrieve share** → `lib/skills/sharing.ts` — `retrieveShare()`
-4. **Render newspaper** → `components/Newspaper.tsx`
+### Integration
+- **Storage:** Browser localStorage (max 5MB)
+- **Max Items:** 20 newspapers
+- **Compression:** Photos compressed to 400×500px JPEG at 0.7 quality
+
+### Key Features
+- Automatic save after generation
+- Progressive quota fallback (full → without images → current only)
+- CRUD operations (create, read, update, delete)
+- Survives page refresh
 
 ---
 
-## Error Handling Pattern
+## 🌐 Skill 6: Internationalization
 
-All skills follow a consistent error handling pattern:
+### Responsibility
+Provide bilingual support for all UI strings and AI content.
 
-1. **Graceful Degradation**: Each skill provides a fallback when primary service fails
-2. **Provider Tracking**: Output includes `provider` field to identify source (AI vs fallback)
-3. **Null/Empty Returns**: Skills return empty/null values instead of throwing exceptions
-4. **Centralized Validation**: Input validation is handled by `lib/rules.ts`
+### Input
+```typescript
+interface I18nInput {
+  key: TranslationKey;
+  language: "en" | "zh";
+}
+```
+
+### Output
+```typescript
+interface I18nOutput {
+  text: string;  // Translated text
+}
+```
+
+### Integration
+- **File:** `lib/i18n.ts`
+- **Languages:** English, Chinese
+- **Features:** All UI strings, achievements, articles, AI prompts
+
+### Key Features
+- 60+ translation keys
+- Language switcher in UI
+- Language-specific fonts
+- Language-specific AI prompts
 
 ---
 
-## Extension Guidelines
+## 🎨 Skill 7: Newspaper Design System
 
-When adding new skills:
+### Responsibility
+Render vintage-style newspaper layouts with proper typography and styling.
 
-1. Create a new file in `lib/skills/` following the naming convention
-2. Define clear Input/Output interfaces
-3. Implement core logic with fallback
-4. Add validation rules to `lib/rules.ts` if needed
-5. Update this documentation
-6. Add integration points in relevant API routes
+### Input
+```typescript
+interface NewspaperInput {
+  newspaper: SharedNewspaper;
+  shareToken?: string;
+  onReset?: () => void;
+}
+```
+
+### Output
+- **Component:** `Newspaper.tsx`
+- **Formats:** Full newspaper view, WeChat Moments card view
+
+### Integration
+- **Fonts:** Courier Prime, Special Elite, IM Fell English, Noto Serif SC
+- **Colors:** Real newsprint tones (year-shifted accents)
+- **Layout:** 2-column justified text, drop caps, pull quotes
+
+### Key Features
+- Real paper texture
+- Vintage typography
+- Era-based color coding
+- Polaroid photo frames
+- Download as PNG
+- View mode toggle (newspaper/card)
+
+---
+
+## 🔒 Skill 8: Security
+
+### Responsibility
+Protect the application from common security threats.
+
+### Features
+- **Input Sanitization:** XSS protection for all text inputs
+- **SSRF Protection:** URL validation against allowlist
+- **Rate Limiting:** 30 requests per minute per IP
+- **API Key Security:** Server-side only API calls
+- **Image CORS:** Remote images converted to base64
+
+### Integration
+- **File:** `lib/security.ts`
+- **Middleware:** Applied to all API routes
+- **Validation:** Input sanitization before AI calls
+
+---
+
+## 📊 Skill 9: Performance Optimization
+
+### Responsibility
+Optimize application performance and resource usage.
+
+### Features
+- **Photo Compression:** 400×500px JPEG at 0.7 quality (~50-100KB)
+- **Image Base64 Conversion:** For sharing and caching
+- **Local Development:** Bind to 0.0.0.0 for phone access
+- **Async Generation:** Parallel article and image generation
+
+### Integration
+- **File:** `lib/storage.ts` (photo compression)
+- **Form:** `app/form/page.tsx` (async generation)
+
+---
+
+> *"The future is not written yet — but we can give it a headline."*

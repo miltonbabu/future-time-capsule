@@ -1,61 +1,174 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# 📰 Future Time Capsule — AI Agent Guidelines
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+> *Built at TRAE Friends Zhengzhou Hackathon, July 2026*
 
-## Project Documentation
+---
 
-### Skill Modules
-- **File**: `docs/SKILLS.md` — Comprehensive documentation of all skill modules including:
-  - Article Generation (`lib/skills/article-generation.ts`)
-  - Image Generation (`lib/skills/image-generation.ts`)
-  - Sharing (`lib/skills/sharing.ts`)
-  - Capsule Management (`lib/skills/capsule-management.ts`)
+## 🎯 Agent Roles
 
-### System Rules
-- **File**: `docs/RULES.md` — Complete documentation of all business rules, validation criteria, and operational constraints including:
-  - Field validation rules
-  - Rate limiting rules
-  - Storage rules
-  - Sharing rules
-  - Security rules
-  - AI generation rules
+This project uses AI agents for three distinct tasks:
 
-### Rules Framework
-- **File**: `lib/rules.ts` — Centralized rules framework with:
-  - `FIELD_RULES`: Field validation rules for all input fields
-  - `RATE_LIMIT_RULES`: Rate limiting configuration
-  - `STORAGE_RULES`: Storage constraints
-  - `SHARE_RULES`: Sharing token rules
-  - `validateCapsuleInput()`: Unified input validation
-  - `sanitizeInput()`: Input sanitization
-  - Helper validation functions
+### 1. Journalist Agent (GLM-4-Flash)
+**Responsibility:** Generate newspaper articles from user input
 
-### UI/UX Components
-- **Toast**: `components/Toast.tsx` — Notification system with success/error/info/warning types
-- **ErrorBoundary**: `components/ErrorBoundary.tsx` — React error boundary for graceful error handling
-- **CapsuleGallery**: `components/CapsuleGallery.tsx` — Gallery view for saved newspapers
+**Inputs:**
+- Name
+- Team
+- Achievement
+- Future date (year)
+- Language (English/Chinese)
 
-### Core Types
-- **File**: `lib/types.ts` — TypeScript type definitions for:
-  - `CapsuleInput`: User input fields (name, team, achievement, futureDate, language, category, location, memory)
-  - `ArticleData`: Generated article content
-  - `SharedNewspaper`: Full newspaper data structure
-  - `DbCapsule`: Database capsule structure
+**Output Format:**
+```json
+{
+  "headline": "Bold newspaper headline with team name",
+  "paragraph1": "First paragraph (1-2 sentences)",
+  "paragraph2": "Second paragraph (1-2 sentences)",
+  "paragraph3": "Third paragraph (1-2 sentences)",
+  "future_quote": "First-person quote from the person",
+  "reward": "Short funny line about their lavish reward",
+  "image_prompt": "English description of a scene for the achievement"
+}
+```
 
-### API Routes
-- `/api/capsules`: CRUD operations for saving capsules
-- `/api/generate-article`: AI article generation
-- `/api/generate-achievement`: AI achievement generation
-- `/api/generate-image`: AI image generation
-- `/api/share`: Create share tokens
-- `/api/share/[token]`: Retrieve shared newspapers
+**Guidelines:**
+- Keep paragraphs concise (1-2 sentences each)
+- Make headlines dramatic and attention-grabbing
+- Include team name in headline
+- Write in the target language (English or Chinese)
+- Image prompt should describe a scene without people/faces
 
-### Key Integration Points
-1. **Newspaper Creation**: Form → Validation → Article Generation → Image Generation → Capsule Creation → Persistence → Share (optional)
-2. **Share View**: Token Validation → Retrieve Share → Render Newspaper
+---
 
-### Error Handling Pattern
-All skills follow graceful degradation with fallback options and provider tracking in outputs.
+### 2. Illustrator Agent (CogView-3-Flash)
+**Responsibility:** Generate photorealistic newspaper illustrations
 
-<!-- END:nextjs-agent-rules -->
+**Inputs:**
+- Achievement text
+- Image prompt from Journalist Agent
+
+**Style Guidelines:**
+- Vintage newspaper photo style
+- Sepia tone
+- Cinematic lighting
+- Highly detailed
+- Photorealistic
+- No people, no faces
+- News photography aesthetic
+
+**Aspect Ratio:** 1024 × 576 (widescreen banner)
+
+---
+
+### 3. Achievement Generator Agent (GLM-4-Flash)
+**Responsibility:** Generate creative achievement suggestions
+
+**Inputs:**
+- Category (tech, ai, money, time, all)
+- Language (English/Chinese)
+
+**Output Format:**
+```json
+{
+  "achievements": ["Idea 1", "Idea 2", "Idea 3"]
+}
+```
+
+**Guidelines:**
+- 3 ideas per request
+- Short (10-15 words each)
+- Funny and creative
+- Category-specific
+- Write in the target language
+
+---
+
+## 🧠 AI Configuration
+
+### Model Selection
+| Task | Model | Cost | Speed |
+|------|-------|------|-------|
+| Article Generation | GLM-4-Flash | Paid (~0.01 RMB/request) | 3-8s |
+| Image Generation | CogView-3-Flash | **FREE** | 5-10s |
+| Achievement Generation | GLM-4-Flash | Paid (~0.01 RMB/request) | 2-5s |
+
+### API Endpoints
+- **Article:** `/api/generate-article` (POST)
+- **Image:** `/api/generate-image` (POST)
+- **Achievement:** `/api/generate-achievement` (POST)
+
+---
+
+## ⚠️ Error Handling
+
+### Fallback System
+When AI services are unavailable:
+1. **Article Generation:** Use pre-built template articles (5 categories, bilingual)
+2. **Image Generation:** Skip image entirely — newspaper renders without illustration
+3. **Achievement Generation:** Use pre-defined achievement pools
+
+### Rate Limiting
+- 30 requests per minute per IP
+- Return 429 status when limit exceeded
+
+### Timeouts
+- Article: 15s (Vercel), 30s (local)
+- Image: 25s
+- Achievement: 15s (Vercel), 30s (local)
+
+---
+
+## 🌐 Bilingual Support
+
+### English
+- Fonts: Courier Prime, Special Elite, IM Fell English
+- Prompts and responses in English
+
+### Chinese
+- Fonts: Noto Serif SC
+- Prompts and responses in Chinese
+- Separate achievement pools for Chinese
+
+### Switching Language
+- UI strings change immediately
+- Achievement suggestions regenerate in new language
+- Newspaper articles regenerate in new language
+
+---
+
+## 🔒 Security
+
+### Input Sanitization
+- Remove HTML tags
+- Escape special characters
+- Limit length (2000 chars)
+
+### SSRF Protection
+- Validate URLs against allowlist
+- Only allow known image CDNs
+
+### API Key Security
+- Store keys in environment variables
+- Never expose to client-side code
+- Server-side only API calls
+
+---
+
+## 📊 Performance Optimization
+
+### Caching
+- Local storage for user's past newspapers
+- Share tokens cached server-side
+
+### Image Optimization
+- Compress user photos to 400×500px JPEG at 0.7 quality
+- Convert remote images to base64 for sharing
+- Use appropriate image formats
+
+### Async Generation
+- Article and image generation can run in parallel
+- Show loading indicators to users
+
+---
+
+> *"We didn't build a time machine. We built a time capsule — one that asks AI to imagine who you'll become, and prints it on tomorrow's front page today."*
