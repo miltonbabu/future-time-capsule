@@ -48,8 +48,16 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
   const handleDownload = async () => {
     const node =
       viewMode === "newspaper" ? articleRef.current : cardRef.current;
-    if (!node) return;
+    if (!node) {
+      alert(
+        lang === "zh"
+          ? "下载失败：未找到内容"
+          : "Download failed: Content not found",
+      );
+      return;
+    }
     setDownloading(true);
+
     const clone = node.cloneNode(true) as HTMLElement;
     clone.style.position = "fixed";
     clone.style.left = "-9999px";
@@ -57,12 +65,15 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
     clone.style.width = node.offsetWidth + "px";
     clone.style.maxWidth = "none";
     clone.style.margin = "0";
+    clone.style.padding = "0";
     clone.style.backgroundImage = "none";
     clone.style.backgroundColor = "#e8dcc8";
     clone.style.backgroundBlendMode = "normal";
+    clone.style.boxSizing = "border-box";
 
     const styled = clone.querySelectorAll<HTMLElement>("*");
     styled.forEach((el) => {
+      el.style.boxSizing = "border-box";
       try {
         const cs = window.getComputedStyle(el);
         if (cs.columnCount && cs.columnCount !== "1") {
@@ -72,7 +83,7 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
         }
         if (cs.backgroundImage && cs.backgroundImage !== "none") {
           el.style.backgroundImage = "none";
-          el.style.backgroundColor = "#f4ead5";
+          el.style.backgroundColor = "#e8dcc8";
         }
       } catch {
         /* ignore CSS access errors */
@@ -93,41 +104,49 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
     });
 
     const imgs = Array.from(clone.querySelectorAll("img"));
-    await Promise.all(
-      imgs.map(async (img) => {
-        const src = img.src;
-        if (src.startsWith("data:")) return;
-        try {
-          const res = await fetch(src, { mode: "cors" });
-          const blob = await res.blob();
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result as string);
-            r.onerror = reject;
-            r.readAsDataURL(blob);
-          });
-          img.src = dataUrl;
-          img.crossOrigin = "anonymous";
-        } catch {
+    for (const img of imgs) {
+      const src = img.src;
+      if (src.startsWith("data:")) continue;
+      try {
+        const res = await fetch(src, { mode: "cors" });
+        if (!res.ok) {
           img.style.display = "none";
+          continue;
         }
-      }),
-    );
+        const blob = await res.blob();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result as string);
+          r.onerror = reject;
+          r.readAsDataURL(blob);
+        });
+        img.src = dataUrl;
+        img.crossOrigin = "anonymous";
+      } catch {
+        img.style.display = "none";
+      }
+    }
 
     document.body.appendChild(clone);
     try {
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 200));
+
       const dataUrl = await toPng(clone, {
         cacheBust: true,
         pixelRatio: 2,
         backgroundColor: "#e8dcc8",
       });
+
       const link = document.createElement("a");
+      link.style.display = "none";
       const suffix = viewMode === "card" ? "-card" : "";
       link.download = `future-chronicle-${newspaper.input.name || "newspaper"}${suffix}.png`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (e) {
+      console.error("First download attempt failed:", e);
       try {
         const dataUrl = await toPng(clone, {
           cacheBust: true,
@@ -135,21 +154,29 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
           backgroundColor: "#e8dcc8",
           skipFonts: true,
         });
+
         const link = document.createElement("a");
+        link.style.display = "none";
         const suffix = viewMode === "card" ? "-card" : "";
         link.download = `future-chronicle-${newspaper.input.name || "newspaper"}${suffix}.png`;
         link.href = dataUrl;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
       } catch (fallbackError) {
+        console.error("Fallback download failed:", fallbackError);
         alert(
           lang === "zh"
             ? "下载失败，请截图保存。"
             : "Download failed — please take a screenshot instead.",
         );
-        console.error(fallbackError);
       }
     } finally {
-      document.body.removeChild(clone);
+      try {
+        document.body.removeChild(clone);
+      } catch {
+        /* ignore removal errors */
+      }
       setDownloading(false);
     }
   };
