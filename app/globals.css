@@ -113,6 +113,11 @@ body {
   border-bottom: 3px double var(--ink);
 }
 
+/* Text accent color utility */
+.text-accent {
+  color: var(--accent);
+}
+
 /* Column layout with vertical rule */
 .cols-2 {
   column-count: 2;
@@ -123,6 +128,7 @@ body {
   .cols-2 {
     column-count: 1;
     column-rule: none;
+    column-gap: 0;
   }
 }
 

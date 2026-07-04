@@ -237,10 +237,10 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
           </div>
 
           {/* Headline + byline + photo */}
-          <div className="mt-6 relative">
+          <div className="mt-6">
             <div className="text-center">
               <h2
-                className={`${headClass} text-3xl sm:text-5xl font-bold leading-tight text-3d-emboss`}
+                className={`${headClass} text-2xl sm:text-3xl md:text-5xl font-bold leading-tight text-3d-emboss`}
                 style={{ color: "var(--ink)" }}
               >
                 {newspaper.article.headline}
@@ -253,8 +253,8 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
               </p>
             </div>
             {newspaper.photoDataUrl && (
-              <div className="absolute -right-2 sm:-right-4 top-0 w-24 sm:w-32">
-                <div className="polaroid-frame frame-3d">
+              <div className="mt-4 flex justify-center">
+                <div className="polaroid-frame frame-3d w-20 sm:w-24 md:w-32">
                   <img
                     src={newspaper.photoDataUrl}
                     alt={newspaper.input.name}
