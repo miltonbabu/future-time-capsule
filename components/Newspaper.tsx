@@ -58,85 +58,183 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
     }
     setDownloading(true);
 
-    const clone = node.cloneNode(true) as HTMLElement;
-    clone.style.position = "fixed";
-    clone.style.left = "-9999px";
-    clone.style.top = "0";
-    clone.style.width = node.offsetWidth + "px";
-    clone.style.maxWidth = "none";
-    clone.style.margin = "0";
-    clone.style.padding = "0";
-    clone.style.backgroundImage = "none";
-    clone.style.backgroundColor = "#e8dcc8";
-    clone.style.backgroundBlendMode = "normal";
-    clone.style.boxSizing = "border-box";
+    try {
+      // 1. Wait for Google Fonts to be ready so text renders correctly.
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
 
-    const styled = clone.querySelectorAll<HTMLElement>("*");
-    styled.forEach((el) => {
-      el.style.boxSizing = "border-box";
-      try {
+      // 2. Build a completely flat off-screen wrapper (no perspective, no 3D).
+      const wrapper = document.createElement("div");
+      wrapper.dataset.downloadWrapper = "true";
+      wrapper.style.position = "fixed";
+      wrapper.style.left = "-9999px";
+      wrapper.style.top = "0";
+      wrapper.style.width = node.offsetWidth + "px";
+      wrapper.style.zIndex = "-1";
+      wrapper.style.background = "#e8dcc8";
+      wrapper.style.perspective = "none";
+      wrapper.style.transform = "none";
+      wrapper.style.margin = "0";
+      wrapper.style.padding = "0";
+      document.body.appendChild(wrapper);
+
+      // 3. Clone the newspaper/card node.
+      const clone = node.cloneNode(true) as HTMLElement;
+      wrapper.appendChild(clone);
+
+      // 4. Aggressively strip every 3D / perspective / transform style.
+      const allEls = clone.querySelectorAll<HTMLElement>("*");
+      allEls.forEach((el) => {
+        // Remove 3D classes.
+        el.classList.remove(
+          "paper-3d",
+          "frame-3d",
+          "text-3d-emboss",
+          "text-3d-engrave",
+          "rule-3d",
+          "quote-3d",
+          "btn-3d",
+          "ornament-3d",
+          "perspective-scene",
+        );
+
+        // Reset transforms and 3D CSS.
+        el.style.transform = "none";
+        el.style.transformStyle = "flat";
+        el.style.perspective = "none";
+        el.style.transformOrigin = "center center";
+
+        // Replace complex layered shadows with a simple subtle one.
         const cs = window.getComputedStyle(el);
-        if (cs.columnCount && cs.columnCount !== "1") {
+        if (cs.boxShadow && cs.boxShadow !== "none") {
+          el.style.boxShadow = "0 1px 4px rgba(0,0,0,0.12)";
+        }
+
+        // Flatten multi-column layout for a clean single-column capture.
+        if (el.classList.contains("cols-2")) {
           el.style.columnCount = "1";
           el.style.columnRule = "none";
           el.style.columnGap = "0";
         }
+
+        // Remove polaroid rotation.
+        if (el.classList.contains("polaroid-frame")) {
+          el.style.transform = "none";
+        }
+
+        // Remove drop-cap pseudo-effect.
+        if (el.classList.contains("drop-cap")) {
+          el.classList.remove("drop-cap");
+        }
+
+        // Neutralise background images that could break SVG serialisation.
         if (cs.backgroundImage && cs.backgroundImage !== "none") {
           el.style.backgroundImage = "none";
-          el.style.backgroundColor = "#e8dcc8";
+          el.style.backgroundColor = "transparent";
         }
-      } catch {
-        /* ignore CSS access errors */
-      }
-      if (el.classList.contains("drop-cap")) {
-        el.classList.remove("drop-cap");
-      }
-      if (el.classList.contains("polaroid-frame")) {
-        el.style.transform = "none";
-      }
-      if (
-        el.classList.contains("paper-3d") ||
-        el.classList.contains("frame-3d")
-      ) {
-        el.style.transform = "none";
-        el.style.transformStyle = "flat";
-      }
-    });
+      });
 
-    const imgs = Array.from(clone.querySelectorAll("img"));
-    for (const img of imgs) {
-      const src = img.src;
-      if (src.startsWith("data:")) continue;
-      try {
-        const res = await fetch(src, { mode: "cors" });
-        if (!res.ok) {
+      // Also strip top-level clone styles.
+      clone.style.transform = "none";
+      clone.style.transformStyle = "flat";
+      clone.style.perspective = "none";
+      clone.style.boxShadow = "none";
+      clone.style.margin = "0";
+      clone.style.maxWidth = "none";
+      clone.style.width = node.offsetWidth + "px";
+      clone.style.background = "#e8dcc8";
+
+      // 5. Convert every image to a data URL so CORS can never taint the canvas.
+      const imgs = Array.from(clone.querySelectorAll<HTMLImageElement>("img"));
+      await Promise.all(
+        imgs.map(async (img) => {
+          const rawSrc = img.getAttribute("src") || "";
+
+          // Already inline — nothing to do.
+          if (!rawSrc || rawSrc.startsWith("data:")) return;
+
+          // Try fetch → FileReader first (works for same-origin + CORS-enabled).
+          try {
+            const res = await fetch(rawSrc, {
+              mode: "cors",
+              cache: "force-cache",
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              const dataUrl = await new Promise<string>((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result as string);
+                r.onerror = reject;
+                r.readAsDataURL(blob);
+              });
+              img.src = dataUrl;
+              return;
+            }
+          } catch {
+            /* fetch failed — try canvas fallback below */
+          }
+
+          // Canvas fallback: draw the already-loaded original image.
+          try {
+            const original = Array.from(node.querySelectorAll("img")).find(
+              (o) => (o.getAttribute("src") || "") === rawSrc,
+            ) as HTMLImageElement | undefined;
+
+            if (
+              original &&
+              original.complete &&
+              original.naturalWidth > 0
+            ) {
+              const canvas = document.createElement("canvas");
+              canvas.width = original.naturalWidth;
+              canvas.height = original.naturalHeight;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(original, 0, 0);
+                img.src = canvas.toDataURL("image/png");
+                return;
+              }
+            }
+          } catch {
+            /* canvas fallback failed */
+          }
+
+          // Nothing worked — hide the image so it can't break the capture.
           img.style.display = "none";
-          continue;
-        }
-        const blob = await res.blob();
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const r = new FileReader();
-          r.onload = () => resolve(r.result as string);
-          r.onerror = reject;
-          r.readAsDataURL(blob);
-        });
-        img.src = dataUrl;
-        img.crossOrigin = "anonymous";
-      } catch {
-        img.style.display = "none";
-      }
-    }
+        }),
+      );
 
-    document.body.appendChild(clone);
-    try {
-      await new Promise((r) => setTimeout(r, 200));
+      // 6. Wait for every remaining image to decode / load inside the clone.
+      await Promise.all(
+        imgs
+          .filter((img) => img.style.display !== "none")
+          .map((img) => {
+            if (img.decode) {
+              return img.decode().catch(() => {});
+            }
+            return new Promise<void>((resolve) => {
+              if (img.complete) resolve();
+              else {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+              }
+            });
+          }),
+      );
 
+      // 7. Give the browser a moment to finish layout / rasterisation.
+      await new Promise((r) => setTimeout(r, 800));
+
+      // 8. Capture the flattened clone.
       const dataUrl = await toPng(clone, {
         cacheBust: true,
         pixelRatio: 2,
         backgroundColor: "#e8dcc8",
+        skipFonts: false,
       });
 
+      // 9. Trigger download.
       const link = document.createElement("a");
       link.style.display = "none";
       const suffix = viewMode === "card" ? "-card" : "";
@@ -147,8 +245,10 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
       document.body.removeChild(link);
     } catch (e) {
       console.error("First download attempt failed:", e);
+
+      // Fallback: capture the original node with skipFonts.
       try {
-        const dataUrl = await toPng(clone, {
+        const dataUrl = await toPng(node, {
           cacheBust: true,
           pixelRatio: 2,
           backgroundColor: "#e8dcc8",
@@ -172,10 +272,10 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
         );
       }
     } finally {
-      try {
-        document.body.removeChild(clone);
-      } catch {
-        /* ignore removal errors */
+      // 10. Clean up the off-screen wrapper.
+      const w = document.querySelector('div[data-download-wrapper="true"]');
+      if (w && w.parentNode) {
+        w.parentNode.removeChild(w);
       }
       setDownloading(false);
     }
