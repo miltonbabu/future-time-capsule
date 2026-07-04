@@ -28,7 +28,6 @@ export default function CapsuleForm({
   const [category, setCategory] = useState("all");
   const [photo, setPhoto] = useState("");
   const [location, setLocation] = useState("");
-  const [memory, setMemory] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [surpriseLoading, setSurpriseLoading] = useState(false);
@@ -124,7 +123,6 @@ export default function CapsuleForm({
         language: lang,
         category,
         location,
-        memory,
       },
       photo,
     );
@@ -294,24 +292,6 @@ export default function CapsuleForm({
           onChange={(e) => setLocation(e.target.value)}
           placeholder={t(lang, "locationPlaceholder")}
           maxLength={100}
-        />
-      </div>
-
-      {/* Memory */}
-      <div className="mt-4 block">
-        <label
-          htmlFor="field-memory"
-          className="mb-1 block text-xs uppercase tracking-widest opacity-70"
-        >
-          {t(lang, "memory")}
-        </label>
-        <textarea
-          id="field-memory"
-          className="input-vintage min-h-20 resize-y"
-          value={memory}
-          onChange={(e) => setMemory(e.target.value)}
-          placeholder={t(lang, "memoryPlaceholder")}
-          maxLength={500}
         />
       </div>
 

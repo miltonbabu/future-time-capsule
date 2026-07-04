@@ -18,7 +18,7 @@ export interface CapsuleInput {
   language: Language;
   category: string; // tech | ai | money | time | all
   location: string;
-  memory: string;
+  memory?: string;
 }
 
 /** Full newspaper data — saved to localStorage, DB, and share tokens. */
