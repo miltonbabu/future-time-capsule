@@ -55,8 +55,10 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
     clone.style.left = "-9999px";
     clone.style.top = "0";
     clone.style.width = node.offsetWidth + "px";
+    clone.style.maxWidth = "none";
+    clone.style.margin = "0";
     clone.style.backgroundImage = "none";
-    clone.style.backgroundColor = "#f4ead5";
+    clone.style.backgroundColor = "#e8dcc8";
     clone.style.backgroundBlendMode = "normal";
 
     const styled = clone.querySelectorAll<HTMLElement>("*");
@@ -118,7 +120,7 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
       const dataUrl = await toPng(clone, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: "#f4ead5",
+        backgroundColor: "#e8dcc8",
       });
       const link = document.createElement("a");
       const suffix = viewMode === "card" ? "-card" : "";
@@ -130,7 +132,7 @@ export default function Newspaper({ newspaper, shareToken, onReset }: Props) {
         const dataUrl = await toPng(clone, {
           cacheBust: true,
           pixelRatio: 2,
-          backgroundColor: "#f4ead5",
+          backgroundColor: "#e8dcc8",
           skipFonts: true,
         });
         const link = document.createElement("a");
